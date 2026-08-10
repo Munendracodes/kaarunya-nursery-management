@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "626025202209",
+    "firebase_url": "https://karunya-nursery-management-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "karunya-nursery-management",
+    "storage_bucket": "karunya-nursery-management.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:626025202209:android:467895089aba2cdea69960",
+        "android_client_info": {
+          "package_name": "com.example.kaarunyanursery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIB0mG_4hriOsTOOmleplRJ2-Lbzfax5k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
