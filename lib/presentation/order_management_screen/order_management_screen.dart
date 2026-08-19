@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kaarunyanursery/presentation/order_management_screen/widgets/view_order_screen.dart';
 
 import '../../services/order_repository.dart';
 import '../../theme/app_theme.dart';
@@ -13,9 +14,9 @@ class OrderManagementScreen extends StatefulWidget {
 
 class _OrderManagementScreenState
     extends State<OrderManagementScreen> {
-  // ============================================================
-  // STATE
-  // ============================================================
+// ============================================================
+// STATE
+// ============================================================
 
   final OrderRepository _orderRepository =
       OrderRepository.instance;
@@ -31,9 +32,9 @@ class _OrderManagementScreenState
 
   bool _isSearching = false;
 
-  // ============================================================
-  // INIT
-  // ============================================================
+// ============================================================
+// INIT
+// ============================================================
 
   @override
   void initState() {
@@ -49,9 +50,9 @@ class _OrderManagementScreenState
     super.dispose();
   }
 
-  // ============================================================
-  // LOAD ORDERS
-  // ============================================================
+// ============================================================
+// LOAD ORDERS
+// ============================================================
 
   Future<void> _loadOrders() async {
     if (mounted) {
@@ -122,18 +123,18 @@ class _OrderManagementScreenState
     }
   }
 
-  // ============================================================
-  // FILTERED ORDERS
-  // ============================================================
+// ============================================================
+// FILTERED ORDERS
+// ============================================================
 
   List<Map<String, dynamic>> get _filteredOrders {
     final searchText =
     _searchController.text.trim().toLowerCase();
 
     return _orders.where((order) {
-      // --------------------------------------------------------
-      // SEARCH
-      // --------------------------------------------------------
+// --------------------------------------------------------
+// SEARCH
+// --------------------------------------------------------
 
       if (searchText.isNotEmpty) {
         final customerName =
@@ -171,9 +172,9 @@ class _OrderManagementScreenState
         }
       }
 
-      // --------------------------------------------------------
-      // STATUS FILTER
-      // --------------------------------------------------------
+// --------------------------------------------------------
+// STATUS FILTER
+// --------------------------------------------------------
 
       if (_statusFilter == 'All') {
         return true;
@@ -186,9 +187,9 @@ class _OrderManagementScreenState
     }).toList();
   }
 
-  // ============================================================
-  // STATUS MATCHING
-  // ============================================================
+// ============================================================
+// STATUS MATCHING
+// ============================================================
 
   bool _matchesStatus(
       Map<String, dynamic> order,
@@ -214,14 +215,6 @@ class _OrderManagementScreenState
       case 'Delivered':
         return orderStatus == 'DELIVERED';
 
-      case 'Pending Payment':
-        return orderStatus == 'PENDING_PAYMENT' ||
-            paymentStatus == 'PARTIAL' ||
-            (
-                orderStatus == 'DELIVERED' &&
-                    paymentStatus != 'PAID'
-            );
-
       case 'Closed':
         return orderStatus == 'CLOSED' ||
             paymentStatus == 'PAID';
@@ -231,9 +224,9 @@ class _OrderManagementScreenState
     }
   }
 
-  // ============================================================
-  // STATUS DISPLAY
-  // ============================================================
+// ============================================================
+// STATUS DISPLAY
+// ============================================================
 
   String _displayStatus(
       Map<String, dynamic> order,
@@ -255,15 +248,6 @@ class _OrderManagementScreenState
       return 'Closed';
     }
 
-    if (orderStatus == 'PENDING_PAYMENT' ||
-        (
-            orderStatus == 'DELIVERED' &&
-                paymentStatus != 'PAID'
-        ) ||
-        paymentStatus == 'PARTIAL') {
-      return 'Pending Payment';
-    }
-
     if (orderStatus == 'DELIVERED') {
       return 'Delivered';
     }
@@ -271,9 +255,9 @@ class _OrderManagementScreenState
     return 'Pending';
   }
 
-  // ============================================================
-  // STATUS COLOR
-  // ============================================================
+// ============================================================
+// STATUS COLOR
+// ============================================================
 
   Color _statusColor(
       String status,
@@ -281,9 +265,6 @@ class _OrderManagementScreenState
     switch (status) {
       case 'Closed':
         return Colors.green.shade700;
-
-      case 'Pending Payment':
-        return Colors.orange.shade700;
 
       case 'Delivered':
         return Colors.blue.shade700;
@@ -301,9 +282,6 @@ class _OrderManagementScreenState
       case 'Closed':
         return Colors.green.shade50;
 
-      case 'Pending Payment':
-        return Colors.orange.shade50;
-
       case 'Delivered':
         return Colors.blue.shade50;
 
@@ -313,9 +291,9 @@ class _OrderManagementScreenState
     }
   }
 
-  // ============================================================
-  // ITEM COUNT
-  // ============================================================
+// ============================================================
+// ITEM COUNT
+// ============================================================
 
   int _itemCount(
       Map<String, dynamic> order,
@@ -329,9 +307,9 @@ class _OrderManagementScreenState
     return 0;
   }
 
-  // ============================================================
-  // NUMBER FORMAT
-  // ============================================================
+// ============================================================
+// NUMBER FORMAT
+// ============================================================
 
   String _formatAmount(
       dynamic value,
@@ -348,9 +326,9 @@ class _OrderManagementScreenState
         .toStringAsFixed(0);
   }
 
-  // ============================================================
-  // FILTER CHIP
-  // ============================================================
+// ============================================================
+// FILTER CHIP
+// ============================================================
 
   Widget _buildFilterChip(
       String label,
@@ -402,9 +380,9 @@ class _OrderManagementScreenState
     );
   }
 
-  // ============================================================
-  // SEARCH BAR
-  // ============================================================
+// ============================================================
+// SEARCH BAR
+// ============================================================
 
   Widget _buildSearchBar(
       ThemeData theme,
@@ -469,9 +447,9 @@ class _OrderManagementScreenState
     );
   }
 
-  // ============================================================
-  // ORDER CARD
-  // ============================================================
+// ============================================================
+// ORDER CARD
+// ============================================================
 
   Widget _buildOrderCard(
       BuildContext context,
@@ -563,9 +541,9 @@ class _OrderManagementScreenState
           crossAxisAlignment:
           CrossAxisAlignment.start,
           children: [
-            // ==================================================
-            // TOP ROW
-            // ==================================================
+// ==================================================
+// TOP ROW
+// ==================================================
 
             Row(
               children: [
@@ -668,9 +646,9 @@ class _OrderManagementScreenState
               height: 14,
             ),
 
-            // ==================================================
-            // CUSTOMER INFORMATION
-            // ==================================================
+// ==================================================
+// CUSTOMER INFORMATION
+// ==================================================
 
             Wrap(
               spacing: 8,
@@ -710,9 +688,9 @@ class _OrderManagementScreenState
               height: 14,
             ),
 
-            // ==================================================
-            // PAYMENT SUMMARY
-            // ==================================================
+// ==================================================
+// PAYMENT SUMMARY
+// ==================================================
 
             Row(
               children: [
@@ -751,52 +729,56 @@ class _OrderManagementScreenState
               height: 14,
             ),
 
-            // ==================================================
-            // VIEW ORDER
-            // ==================================================
+// ==================================================
+// VIEW ORDER
+// ==================================================
 
             SizedBox(
               width:
               double.infinity,
               child:
               OutlinedButton.icon(
-                onPressed: () {
-                  // We will connect this to
-                  // Manage Order / Order Details
-                  // screen next.
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ViewOrderScreen(
+                        order: order,
+                      ),
+                    ),
+                  );
+
+                  // Reload Order Management after
+                  // returning from View Order.
+                  //
+                  // This is important because payment/status
+                  // may have changed.
+                  if (result == true) {
+                    await _loadOrders();
+                  }
                 },
-                icon:
-                const Icon(
-                  Icons
-                      .arrow_forward_rounded,
+                icon: const Icon(
+                  Icons.arrow_forward_rounded,
                   size: 18,
                 ),
-                label:
-                const Text(
+                label: const Text(
                   'View Order',
                 ),
-                style:
-                OutlinedButton
-                    .styleFrom(
+                style: OutlinedButton.styleFrom(
                   foregroundColor:
                   AppTheme.primary,
-                  side:
-                  BorderSide(
-                    color: AppTheme
-                        .primary
-                        .withAlpha(90),
+                  side: BorderSide(
+                    color:
+                    AppTheme.primary.withAlpha(90),
                   ),
                   padding:
-                  const EdgeInsets
-                      .symmetric(
+                  const EdgeInsets.symmetric(
                     vertical: 11,
                   ),
                   shape:
                   RoundedRectangleBorder(
                     borderRadius:
-                    BorderRadius.circular(
-                      12,
-                    ),
+                    BorderRadius.circular(12),
                   ),
                 ),
               ),
@@ -807,9 +789,9 @@ class _OrderManagementScreenState
     );
   }
 
-  // ============================================================
-  // INFO CHIP
-  // ============================================================
+// ============================================================
+// INFO CHIP
+// ============================================================
 
   Widget _infoChip(
       IconData icon,
@@ -818,7 +800,7 @@ class _OrderManagementScreenState
     return Container(
       padding:
       const EdgeInsets.symmetric(
-        horizontal: 10,
+        horizontal: 6,
         vertical: 7,
       ),
       decoration:
@@ -857,9 +839,9 @@ class _OrderManagementScreenState
     );
   }
 
-  // ============================================================
-  // AMOUNT COLUMN
-  // ============================================================
+// ============================================================
+// AMOUNT COLUMN
+// ============================================================
 
   Widget _amountColumn({
     required String label,
@@ -898,9 +880,9 @@ class _OrderManagementScreenState
     );
   }
 
-  // ============================================================
-  // EMPTY STATE
-  // ============================================================
+// ============================================================
+// EMPTY STATE
+// ============================================================
 
   Widget _buildEmptyState(
       ThemeData theme,
@@ -999,9 +981,9 @@ class _OrderManagementScreenState
     );
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
+// ============================================================
+// BUILD
+// ============================================================
 
   @override
   Widget build(
@@ -1017,9 +999,9 @@ class _OrderManagementScreenState
       backgroundColor:
       AppTheme.backgroundLight,
 
-      // ========================================================
-      // APP BAR
-      // ========================================================
+// ========================================================
+// APP BAR
+// ========================================================
 
       appBar: AppBar(
         backgroundColor:
@@ -1081,23 +1063,23 @@ class _OrderManagementScreenState
         ],
       ),
 
-      // ========================================================
-      // BODY
-      // ========================================================
+// ========================================================
+// BODY
+// ========================================================
 
       body: SafeArea(
         child: Column(
           children: [
-            // ----------------------------------------------------
-            // SEARCH
-            // ----------------------------------------------------
+// ----------------------------------------------------
+// SEARCH
+// ----------------------------------------------------
 
             if (_isSearching)
               _buildSearchBar(theme),
 
-            // ----------------------------------------------------
-            // STATUS FILTERS
-            // ----------------------------------------------------
+// ----------------------------------------------------
+// STATUS FILTERS
+// ----------------------------------------------------
 
             SizedBox(
               height: 48,
@@ -1113,7 +1095,7 @@ class _OrderManagementScreenState
                   16,
                   6,
                 ),
-                itemCount: 5,
+                itemCount: 4,
                 separatorBuilder:
                     (_, __) =>
                 const SizedBox(
@@ -1125,7 +1107,6 @@ class _OrderManagementScreenState
                     'All',
                     'Pending',
                     'Delivered',
-                    'Pending Payment',
                     'Closed',
                   ];
 
@@ -1136,9 +1117,9 @@ class _OrderManagementScreenState
               ),
             ),
 
-            // ----------------------------------------------------
-            // ORDER COUNT
-            // ----------------------------------------------------
+// ----------------------------------------------------
+// ORDER COUNT
+// ----------------------------------------------------
 
             Padding(
               padding:
@@ -1184,9 +1165,9 @@ class _OrderManagementScreenState
               ),
             ),
 
-            // ----------------------------------------------------
-            // ORDER LIST
-            // ----------------------------------------------------
+// ----------------------------------------------------
+// ORDER LIST
+// ----------------------------------------------------
 
             Expanded(
               child: _isLoading
