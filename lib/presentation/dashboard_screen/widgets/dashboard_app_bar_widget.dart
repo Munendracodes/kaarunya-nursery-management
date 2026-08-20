@@ -35,7 +35,7 @@ class DashboardAppBarWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hello, Ramu 🌿',
+            'Hello, Munendra 🌿',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
