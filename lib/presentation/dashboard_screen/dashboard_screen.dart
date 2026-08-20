@@ -919,7 +919,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Row(
           children: [
             Text(
-              'Recent Orders',
+              'Recent Orders', //recent orders
               style: theme
                   .textTheme
                   .titleMedium
