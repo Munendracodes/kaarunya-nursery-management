@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../presentation/dashboard_screen/dashboard_screen.dart';
 import '../presentation/login_screen/login_screen.dart';
+import '../presentation/login_screen/widgets/create_user_screen.dart';
 import '../presentation/manage_screen/manage_screen.dart';
 import '../presentation/order_management_screen/order_management_screen.dart';
 import '../presentation/payments_screen/payments_screen.dart';
@@ -23,6 +24,8 @@ class AppRoutes {
   static const String paymentsScreen = '/payments-screen';
   static const String settingsScreen = '/settings-screen';
   static const String deliveryManagementScreen = '/delivery-management-screen';
+  static const String createUserScreen =
+      '/create-user';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -45,6 +48,33 @@ final GoRouter appRouter = GoRouter(
         },
         transitionDuration: const Duration(milliseconds: 280),
       ),
+    ),
+
+    // Create User — outside shell
+    GoRoute(
+      path: AppRoutes.createUserScreen,
+      pageBuilder: (context, state) =>
+          CustomTransitionPage(
+            key: state.pageKey,
+            child: const CreateUserScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
+                child: child,
+              );
+            },
+            transitionDuration:
+            const Duration(milliseconds: 300),
+          ),
     ),
 
     // Auth screen — outside shell

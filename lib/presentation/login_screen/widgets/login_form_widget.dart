@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../../../services/firebase_service.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../routes/app_routes.dart';
+import '../../../services/user_auth_service.dart';
 import '../../../theme/app_theme.dart';
-import '../../../services/firestore_repository.dart';
 
 class LoginFormWidget extends StatefulWidget {
   final String language;
@@ -10,28 +11,27 @@ class LoginFormWidget extends StatefulWidget {
   final bool isTablet;
 
   const LoginFormWidget({
+    super.key,
     required this.language,
     required this.onSuccess,
     this.isTablet = false,
-    super.key,
   });
 
   @override
-  State<LoginFormWidget> createState() => _LoginFormWidgetState();
+  State<LoginFormWidget> createState() =>
+      _LoginFormWidgetState();
 }
 
-class _LoginFormWidgetState extends State<LoginFormWidget> {
-  final _formKey = GlobalKey<FormState>();
-  final _mobileController = TextEditingController();
-  final _pinController = TextEditingController();
-  bool _obscurePin = true;
-  bool _rememberMe = false;
-  bool _isLoading = false;
-  String? _errorMessage;
+class _LoginFormWidgetState
+    extends State<LoginFormWidget> {
+  final _mobileController =
+  TextEditingController();
 
-  // Fallback credentials (used if Firestore is unavailable)
-  static const String _fallbackMobile = '9876543210';
-  static const String _fallbackPin = '123456';
+  final _pinController =
+  TextEditingController();
+
+  bool _obscurePin = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -40,325 +40,509 @@ class _LoginFormWidgetState extends State<LoginFormWidget> {
     super.dispose();
   }
 
-  String _t(String en, String te) => widget.language == 'TE' ? te : en;
+  // ============================================================
+  // LOGIN
+  // ============================================================
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> _login() async {
+    FocusScope.of(context).unfocus();
+
+    final mobile =
+    _mobileController.text.trim();
+
+    final pin =
+    _pinController.text.trim();
+
+    if (mobile.isEmpty) {
+      _showError(
+        'Please enter mobile number.',
+      );
+      return;
+    }
+
+    if (mobile.length != 10) {
+      _showError(
+        'Please enter a valid 10 digit mobile number.',
+      );
+      return;
+    }
+
+    if (pin.isEmpty) {
+      _showError(
+        'Please enter your 6 digit PIN.',
+      );
+      return;
+    }
+
+    if (pin.length != 6) {
+      _showError(
+        'PIN must contain exactly 6 digits.',
+      );
       return;
     }
 
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
-      // Try to validate against Firestore auth settings
-      final settings =
-      await FirestoreRepository.instance.getAuthSettings();
+      await UserAuthService.instance.login(
+        mobileNumber: mobile,
+        password: pin,
+      );
 
-      String validMobile = _fallbackMobile;
-      String validPin = _fallbackPin;
+      if (!mounted) return;
 
-      if (settings != null) {
-        validMobile =
-            settings['managerMobile'] as String? ??
-                _fallbackMobile;
+      widget.onSuccess();
+    } catch (e) {
+      if (!mounted) return;
 
-        validPin =
-            settings['managerPin'] as String? ??
-                _fallbackPin;
-      }
-
-      // ==========================================================
-      // LOGIN SUCCESS
-      // ==========================================================
-
-      if (_mobileController.text.trim() == validMobile &&
-          _pinController.text == validPin) {
-
-        // Initialize the current user for
-        // Firebase Realtime Database.
-        FirebaseService.instance.setCurrentUser(
-          _mobileController.text.trim(),
-        );
-
-        widget.onSuccess();
-      } else {
+      _showError(
+        e.toString().replaceFirst(
+          'Exception: ',
+          '',
+        ),
+      );
+    } finally {
+      if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = _t(
-            'Invalid credentials. Use registered mobile & PIN.',
-            'తప్పు వివరాలు. నమోదిత మొబైల్ & పిన్ వాడండి.',
-          );
-        });
-      }
-    } catch (_) {
-      // ==========================================================
-      // FALLBACK LOGIN
-      // ==========================================================
-
-      if (_mobileController.text.trim() ==
-          _fallbackMobile &&
-          _pinController.text == _fallbackPin) {
-
-        // Initialize the current user even when
-        // Firestore is unavailable.
-        FirebaseService.instance.setCurrentUser(
-          _mobileController.text.trim(),
-        );
-
-        widget.onSuccess();
-      } else {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = _t(
-            'Invalid credentials — use 9876543210 / 123456',
-            'తప్పు వివరాలు — 9876543210 / 123456 వాడండి',
-          );
         });
       }
     }
   }
 
-  void _autofill() {
-    _mobileController.text = _fallbackMobile;
-    _pinController.text = _fallbackPin;
+  // ============================================================
+  // ERROR
+  // ============================================================
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior:
+          SnackBarBehavior.floating,
+          margin:
+          const EdgeInsets.all(16),
+          shape:
+          RoundedRectangleBorder(
+            borderRadius:
+            BorderRadius.circular(12),
+          ),
+        ),
+      );
   }
+
+  // ============================================================
+  // PIN CHANGE
+  // ============================================================
+
+  void _onPinChanged(String value) {
+    if (value.length == 6) {
+      FocusScope.of(context).unfocus();
+    }
+  }
+
+  // ============================================================
+  // INPUT DECORATION
+  // ============================================================
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required String hint,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(
+        icon,
+        color: AppTheme.primary,
+      ),
+      filled: true,
+      fillColor: Colors.white,
+
+      contentPadding:
+      const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+
+      border: OutlineInputBorder(
+        borderRadius:
+        BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color:
+          Colors.grey.shade300,
+        ),
+      ),
+
+      enabledBorder:
+      OutlineInputBorder(
+        borderRadius:
+        BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color:
+          Colors.grey.shade300,
+        ),
+      ),
+
+      focusedBorder:
+      OutlineInputBorder(
+        borderRadius:
+        BorderRadius.circular(14),
+        borderSide: BorderSide(
+          color: AppTheme.primary,
+          width: 1.5,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme =
+    Theme.of(context);
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, widget.isTablet ? 0 : 24),
-      decoration: widget.isTablet
-          ? null
-          : BoxDecoration(
-              color: AppTheme.surfaceLight,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(20),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
+    // Keep the login form compact.
+    final double formWidth =
+    widget.isTablet
+        ? 420
+        : 360;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints:
+        BoxConstraints(
+          maxWidth: formWidth,
+        ),
+        child: Padding(
+          padding:
+          const EdgeInsets.symmetric(
+            horizontal: 18,
+          ),
+          child: Column(
+            mainAxisSize:
+            MainAxisSize.min,
+            crossAxisAlignment:
+            CrossAxisAlignment.center,
+            children: [
+              // ==================================================
+              // HEADER
+              // ==================================================
+
+              Text(
+                'Welcome Back',
+                textAlign:
+                TextAlign.center,
+                style: theme
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(
+                  fontWeight:
+                  FontWeight.w800,
+                  color:
+                  AppTheme.primary,
+                  letterSpacing:
+                  -0.4,
                 ),
-              ],
-            ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!widget.isTablet) ...[
+              ),
+
+              const SizedBox(
+                height: 5,
+              ),
+
+              Text(
+                'Login to manage your nursery',
+                textAlign:
+                TextAlign.center,
+                style: theme
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(
+                  color:
+                  Colors.grey.shade600,
+                ),
+              ),
+
+              // Slightly reduced spacing
+              // so Create User remains visible.
+              const SizedBox(
+                height: 18,
+              ),
+
+              // ==================================================
+              // MOBILE NUMBER
+              // ==================================================
+
+              SizedBox(
+                width: double.infinity,
+                child: TextField(
+                  controller:
+                  _mobileController,
+                  keyboardType:
+                  TextInputType.phone,
+                  maxLength: 10,
+                  textInputAction:
+                  TextInputAction.next,
+                  decoration:
+                  _inputDecoration(
+                    label:
+                    'Mobile Number',
+                    hint:
+                    'Enter 10 digit mobile number',
+                    icon:
+                    Icons.phone_outlined,
+                  ).copyWith(
+                    counterText: '',
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                height: 12,
+              ),
+
+              // ==================================================
+              // PIN
+              // ==================================================
+
+              SizedBox(
+                width: double.infinity,
+                child: TextField(
+                  controller:
+                  _pinController,
+                  obscureText:
+                  _obscurePin,
+                  keyboardType:
+                  TextInputType.number,
+                  maxLength: 6,
+                  textInputAction:
+                  TextInputAction.done,
+                  onChanged:
+                  _onPinChanged,
+                  onSubmitted: (_) =>
+                      _login(),
+                  decoration:
+                  _inputDecoration(
+                    label:
+                    '6 Digit PIN',
+                    hint:
+                    'Enter your 6 digit PIN',
+                    icon:
+                    Icons
+                        .lock_outline_rounded,
+                  ).copyWith(
+                    counterText: '',
+                    suffixIcon:
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscurePin =
+                          !_obscurePin;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePin
+                            ? Icons
+                            .visibility_outlined
+                            : Icons
+                            .visibility_off_outlined,
+                        color: Colors
+                            .grey
+                            .shade600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                height: 5,
+              ),
+
+              // ==================================================
+              // PIN INFO
+              // ==================================================
+
+              Align(
+                alignment:
+                Alignment.centerLeft,
+                child: Padding(
+                  padding:
+                  const EdgeInsets
+                      .only(
+                    left: 4,
+                  ),
+                  child: Row(
+                    mainAxisSize:
+                    MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons
+                            .info_outline_rounded,
+                        size: 14,
+                        color: Colors
+                            .grey
+                            .shade500,
+                      ),
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      Text(
+                        'Enter your 6 digit PIN',
+                        style: theme
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                          color: Colors
+                              .grey
+                              .shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                height: 16,
+              ),
+
+              // ==================================================
+              // LOGIN BUTTON
+              // ==================================================
+
               Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.outline,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-            Text(
-              _t('Welcome Back 👋', 'స్వాగతం 👋'),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _t(
-                'Sign in to manage your nursery',
-                'మీ నర్సరీని నిర్వహించడానికి సైన్ ఇన్ చేయండి',
-              ),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Mobile number field
-            TextFormField(
-              controller: _mobileController,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              decoration: InputDecoration(
-                labelText: _t('Mobile Number', 'మొబైల్ నంబర్'),
-                hintText: _t('Enter 10-digit mobile', '10 అంకెల నంబర్'),
-                prefixIcon: const Icon(Icons.phone_android_rounded),
-                prefixText: '+91  ',
-              ),
-              validator: (v) {
-                if (v == null || v.isEmpty) {
-                  return _t('Mobile number required', 'మొబైల్ నంబర్ అవసరం');
-                }
-                if (v.length < 10) {
-                  return _t(
-                    'Enter valid 10-digit number',
-                    'చెల్లుబాటు అయ్యే నంబర్ నమోదు చేయండి',
-                  );
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // PIN field
-            TextFormField(
-              controller: _pinController,
-              obscureText: _obscurePin,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(6),
-              ],
-              decoration: InputDecoration(
-                labelText: _t('6-digit PIN', '6 అంకెల పిన్'),
-                hintText: _t('Enter your PIN', 'మీ పిన్ నమోదు చేయండి'),
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePin
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                  ),
-                  onPressed: () => setState(() => _obscurePin = !_obscurePin),
-                ),
-              ),
-              validator: (v) {
-                if (v == null || v.isEmpty) {
-                  return _t('PIN required', 'పిన్ అవసరం');
-                }
-                if (v.length < 6) {
-                  return _t('PIN must be 6 digits', 'పిన్ 6 అంకెలు ఉండాలి');
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // Remember me row
-            Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: _rememberMe,
-                    onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                    activeColor: AppTheme.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _t('Remember me', 'నన్ను గుర్తుంచుకో'),
-                  style: theme.textTheme.bodyMedium,
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    _t('Forgot PIN?', 'పిన్ మర్చిపోయారా?'),
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-
-            // Error message
-            if (_errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      color: AppTheme.error,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: TextStyle(
-                          color: AppTheme.error,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                child: SizedBox(
+                  width:
+                  widget.isTablet
+                      ? 220
+                      : 180,
+                  height: 48,
+                  child:
+                  ElevatedButton(
+                    onPressed:
+                    _isLoading
+                        ? null
+                        : _login,
+                    style:
+                    ElevatedButton
+                        .styleFrom(
+                      backgroundColor:
+                      AppTheme
+                          .primary,
+                      foregroundColor:
+                      Colors.white,
+                      elevation: 2,
+                      shadowColor:
+                      AppTheme
+                          .primary
+                          .withAlpha(
+                        60,
+                      ),
+                      shape:
+                      RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius
+                            .circular(
+                          14,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-
-            // Login button
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                    child: _isLoading
+                        ? const SizedBox(
+                      width: 21,
+                      height: 21,
+                      child:
+                      CircularProgressIndicator(
+                        strokeWidth:
+                        2,
+                        color: Colors
+                            .white,
+                      ),
+                    )
+                        : Row(
+                      mainAxisAlignment:
+                      MainAxisAlignment
+                          .center,
+                      children: const [
+                        Icon(
+                          Icons
+                              .login_rounded,
+                          size: 19,
+                        ),
+                        SizedBox(
+                          width: 7,
+                        ),
+                        Text(
+                          'Login',
+                          style:
+                          TextStyle(
+                            fontSize:
+                            15,
+                            fontWeight:
+                            FontWeight
+                                .w700,
                           ),
                         ),
-                      )
-                    : Text(
-                        _t('Sign In', 'సైన్ ఇన్'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Demo autofill
-            Center(
-              child: TextButton(
-                onPressed: _autofill,
-                child: Text(
-                  _t('Use demo credentials', 'డెమో వివరాలు వాడండి'),
-                  style: TextStyle(color: AppTheme.primaryLight, fontSize: 13),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(
+                height: 8,
+              ),
+
+              // ==================================================
+              // CREATE USER
+              // ==================================================
+
+              TextButton.icon(
+                onPressed:
+                _isLoading
+                    ? null
+                    : () {
+                  context.push(
+                    AppRoutes
+                        .createUserScreen,
+                  );
+                },
+                style:
+                TextButton.styleFrom(
+                  foregroundColor:
+                  AppTheme.primary,
+                  padding:
+                  const EdgeInsets
+                      .symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                ),
+                icon: const Icon(
+                  Icons
+                      .person_add_alt_1_rounded,
+                  size: 18,
+                ),
+                label: const Text(
+                  'Create User',
+                  style: TextStyle(
+                    fontWeight:
+                    FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
