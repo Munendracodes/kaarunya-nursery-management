@@ -31,24 +31,13 @@ class DashboardAppBarWidget extends StatelessWidget {
       shadowColor: Colors.black.withAlpha(20),
       automaticallyImplyLeading: false,
       toolbarHeight: 72,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Hello, Munendra 🌿',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            _greeting(),
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontStyle: FontStyle.italic,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+      title: Align(
+        alignment: Alignment.centerLeft,
+        child: Image.asset(
+          'assets/images/kaarunya_header_logo.png',
+          height: 52,
+          fit: BoxFit.contain,
+        ),
       ),
       actions: [
         // Notification bell
